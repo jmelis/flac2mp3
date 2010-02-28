@@ -23,7 +23,7 @@ class Metadata:
                 }
         for key, val in dict_params.items():
             if key in self.metadata:
-                params.extend(['--t'+val,"'%s'" % (self.metadata[key],)])
+                params.extend(['--t'+val,self.metadata[key]])
         return params
 
     def get_flac_metadata(self,flac):
@@ -58,29 +58,15 @@ def create_dirs(file):
         os.makedirs(dir)
 
 def flac2mp3(flac):
+    lame_opts = '-m s -q 2 -V 2 -b 128 -B 320'.split(' ')
     mp3 = target_mp3(flac)
     create_dirs(mp3)
-    print Metadata(flac).to_params()    
-
-    #flac_command = "flac -d "
-    #lame_command = 'lame --ta "Mozart" --tl "Requiem" --tg "Classical" ' # change these settings to suit your needs
-    #count =+ 1
-    #
-    #filename_wav = file_name[:-4] + "wav"
-    #filename_mp3 = file_name[:-4] + "mp3"
-    #
-    #flac_command = flac_command + '"' + file_name + '"'
-    #lame_command = lame_command + ' "' + filename_wav + '" "' + filename_mp3 + '"'
-    #
-    #print "[X] " + flac_command
-    #print "[X] " + lame_command
-    #
-    #print "[X] Flac Deflating: " + file_name + "..."
-    #os.popen(flac_command)
-    #print "[X] Converting to Mp3: " + filename_wav + "..."
-    #os.popen(lame_command)
-    #os.remove(filename_wav)
-    #print "[X] Finished: " + filename_mp3
+    metadata = Metadata(flac).to_params()
+    
+    flac_process = Popen(['flac','-dc',flac],stdout=PIPE)
+    lame_process = Popen(['lame'] + lame_opts + metadata + ['--add-id3v2','-',mp3],stdin=flac_process.stdout,stdout = PIPE)
+    output = lame_process.communicate()[0]
+        
 
 origin = "/media/music/Music/Ahmad Jamal"
 os.chdir(origin)

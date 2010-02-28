@@ -10,6 +10,7 @@ class Metadata:
         return self.metadata
 
     def to_params(self):
+        params = list()
         dict_params = {
                 'year':'y',
                 'artist':'a',
@@ -20,6 +21,10 @@ class Metadata:
                 'date':'y',
                 'album artist':'a'
                 }
+        for key, val in dict_params.items():
+            if key in self.metadata:
+                params.extend(['--t'+val,"'%s'" % (self.metadata[key],)])
+        return params
 
     def get_flac_metadata(self,flac):
         metadata = dict()
@@ -28,7 +33,7 @@ class Metadata:
         metadata_list = output.split('\n')
         for elem in metadata_list:
             if '=' in elem:
-                data  = elem.split('=')
+                data = elem.split('=')
                 key = data[0].lower()
                 metadata[key] = data[1].strip()
         return metadata
@@ -50,15 +55,12 @@ def target_mp3(flac):
 def create_dirs(file):
     dir = os.path.dirname(file)
     if not os.path.isdir(dir):
-        print "creating dir " + os.path.abspath(dir)
         os.makedirs(dir)
-
 
 def flac2mp3(flac):
     mp3 = target_mp3(flac)
     create_dirs(mp3)
-    for key, val in Metadata(flac).to_dict().items():
-        print key
+    print Metadata(flac).to_params()    
 
     #flac_command = "flac -d "
     #lame_command = 'lame --ta "Mozart" --tl "Requiem" --tg "Classical" ' # change these settings to suit your needs
@@ -80,7 +82,7 @@ def flac2mp3(flac):
     #os.remove(filename_wav)
     #print "[X] Finished: " + filename_mp3
 
-origin = "/Users/jmelis/borrar/music"
+origin = "/media/music/Music/Ahmad Jamal"
 os.chdir(origin)
 flacs = get_flacs(origin)
 for flac in flacs:

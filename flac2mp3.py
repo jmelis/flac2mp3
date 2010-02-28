@@ -1,8 +1,37 @@
 #!/usr/bin/python
+import sys, os
+from subprocess import Popen, PIPE
 
-import os, subprocess
+class Metadata:
+    def __init__(self,flac):
+        self.metadata = self.get_flac_metadata(flac)
 
-import os
+    def to_dict(self):
+        return self.metadata
+
+    def to_params(self):
+        dict_params = {
+                'year':'y',
+                'artist':'a',
+                'comment':'c',
+                'album':'l',
+                'genre':'g',
+                'tracknum':'n',
+                'date':'y',
+                'album artist':'a'
+                }
+
+    def get_flac_metadata(self,flac):
+        metadata = dict()
+        command = 'metaflac --export-tags-to=-'.split(' ')
+        output = Popen(command + [flac], stdout=PIPE).communicate()[0]
+        metadata_list = output.split('\n')
+        for elem in metadata_list:
+            if '=' in elem:
+                data  = elem.split('=')
+                key = data[0].lower()
+                metadata[key] = data[1].strip()
+        return metadata
 
     
 def append_list(arg, directory, files):
@@ -24,9 +53,12 @@ def create_dirs(file):
         print "creating dir " + os.path.abspath(dir)
         os.makedirs(dir)
 
+
 def flac2mp3(flac):
     mp3 = target_mp3(flac)
     create_dirs(mp3)
+    for key, val in Metadata(flac).to_dict().items():
+        print key
 
     #flac_command = "flac -d "
     #lame_command = 'lame --ta "Mozart" --tl "Requiem" --tg "Classical" ' # change these settings to suit your needs
